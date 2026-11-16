@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SoundSong ระบบขอเพลง</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap");
+:root{--ink:#111;--blue:#2f55a4;--red:#d9434b;--glass:rgba(255,255,255,.55);--line:rgba(255,255,255,.85);--mut:#657084}
+*{box-sizing:border-box;margin:0}
+body{font:14px/1.45 "Noto Sans Thai",system-ui,sans-serif;color:var(--ink);min-height:100vh;background:linear-gradient(135deg,#e9c5c5,#d4d2e8);display:grid;place-items:center;padding:24px 12px}
+.stage{display:flex;gap:28px;align-items:flex-start;max-width:100%;overflow-x:auto;padding:10px;scroll-snap-type:x mandatory}
+.phone{flex:none;width:min(340px,calc(100vw - 48px));height:700px;border:6px solid #fff;border-radius:46px;background:linear-gradient(170deg,#c3cfde,#dde0ea 60%,#cbd3e2);box-shadow:0 22px 50px rgba(60,60,100,.18);overflow:hidden;display:flex;flex-direction:column;scroll-snap-align:center}
+.sb{display:flex;justify-content:space-between;padding:14px 26px 6px;font-weight:600;font-size:13px}
+.bd{flex:1;overflow:auto;padding:8px 16px 22px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{font-weight:800;font-size:20px;display:flex;align-items:center;gap:8px}
+.logo i{width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-style:normal;font-size:14px}
+.card{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:22px;padding:14px}
+.big{font-size:34px;font-weight:800;text-align:center;letter-spacing:-.5px;line-height:1.2}
+.c{text-align:center;color:var(--mut);font-size:12px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.7)}
+.row:first-of-type{border:0}
+.ic{width:38px;height:38px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none;font-weight:700}
+.tx{flex:1;min-width:0}
+.tx b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx small,small{color:var(--mut)}
+button{font:inherit;cursor:pointer;border:0}
+button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.pill{background:var(--ink);color:#fff;border-radius:99px;padding:7px 14px;font-weight:600;font-size:12px;white-space:nowrap}
+.pill.ghost{background:#fff;color:var(--ink)}
+.pill.blue{background:var(--blue)}
+.pill:disabled{opacity:.35;cursor:not-allowed}
+input{width:100%;border:1px solid var(--line);background:rgba(255,255,255,.6);border-radius:99px;padding:11px 16px;font:inherit}
+.now{background:var(--ink);color:#fff}
+.now small{color:#b8c0cc}
+.now .t{font-size:20px;font-weight:800;margin-top:6px}
+.bar{height:5px;border-radius:9px;background:rgba(255,255,255,.2);margin-top:14px;overflow:hidden}
+.bar i{display:block;height:100%;width:38%;background:#fff;border-radius:9px}
+.chip{display:inline-block;border-radius:99px;padding:3px 11px;font-size:11px;font-weight:600;background:#fff;color:var(--ink)}
+.chip.red{background:#fde3e4;color:var(--red)}
+.chip.sel{background:var(--ink);color:#fff}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips .chip{padding:6px 12px;font-size:12px}
+.sec{margin-top:12px;font-weight:700;font-size:12px;color:var(--mut)}
+.chord{display:inline-block;background:#fff;border-radius:10px;padding:6px 11px;margin:4px 5px 0 0;font-weight:800;font-size:16px}
+.tr{display:flex;align-items:center;gap:6px}
+.tip{display:flex;gap:12px;align-items:center}
+.tip .ic{background:var(--ink);color:#fff}
+dialog{margin:auto;border:6px solid #fff;border-radius:34px;background:linear-gradient(170deg,#c3cfde,#e2e4ee);padding:20px;width:min(320px,92vw);text-align:center}
+dialog::backdrop{background:rgba(40,40,70,.35);backdrop-filter:blur(4px)}
+dialog .qr{width:190px;margin:12px auto;background:#fff;padding:10px;border-radius:18px}
+dialog svg{display:block;width:100%}
+dialog form{display:flex;gap:8px;justify-content:center;margin-top:12px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,40px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;opacity:0;transition:.25s;pointer-events:none}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+
+.cv{position:relative;width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;color:#fff;font-size:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 3px 8px rgba(40,50,90,.2);overflow:visible}
+.cv img{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+.cv span{text-shadow:0 1px 4px rgba(0,0,0,.3)}
+.cv.lg{width:58px;height:58px;border-radius:16px;font-size:26px}
+.cv.lg img{border-radius:16px}
+.cv em{position:absolute;left:-5px;top:-5px;min-width:19px;height:19px;border-radius:99px;background:#fff;color:var(--ink);font:700 11px/19px "Noto Sans Thai",sans-serif;text-align:center;font-style:normal;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.np{display:flex;gap:12px;align-items:center;margin-top:8px}
+.np .t{margin-top:0}
+
+dialog form.col{flex-direction:column;align-items:stretch;gap:10px;text-align:left}
+dialog h3{margin-bottom:4px}
+.file{display:block;font-size:12px;color:var(--mut)}
+.file input{margin-top:4px;border-radius:14px;padding:8px 12px}
+textarea{width:100%;border:1px solid var(--line);background:rgba(255,255,255,.7);border-radius:16px;padding:10px 12px;font:inherit;resize:vertical;margin-top:10px}
+</style>
+</head>
+<body>
+<main class="stage">
+  <section class="phone" id="p1" aria-label="หน้าลูกค้า"></section>
+  <section class="phone" id="p2" aria-label="หน้าคิวเพลง"></section>
+  <section class="phone" id="p3" aria-label="หน้านักดนตรี"></section>
+</main>
+<dialog id="pay"></dialog>
+<dialog id="add"></dialog>
+<div id="toast" role="status"></div>
+<script>
+// คลังเพลงตัวอย่าง (ชื่อเพลง/คอร์ดสมมติ) แก้ไขหรือแทนที่ด้วยเพลงของร้านได้เลย
+// cover (ไม่บังคับ) = ที่อยู่รูปปก เช่น cover:"covers/s1.jpg" ถ้าไม่ใส่จะสร้างปกไล่สีให้อัตโนมัติ
+// sec = [ชื่อท่อน, "คอร์ด คอร์ด ..."]
+window.SONGS = [
+  {id:"s1", t:"ลมหายใจกลางคืน", a:"วงเดอะซอย", key:"C", sec:[["Intro","C G Am F"],["Verse","C G Am F"],["Chorus","F G Em Am F G C"]]},
+  {id:"s2", t:"ฝนตกที่ปลายซอย", a:"นุ่น พลอย", key:"G", sec:[["Intro","G D Em C"],["Verse","G D Em C"],["Chorus","C D G Em C D G"]]},
+  {id:"s3", t:"ดาวบนดาดฟ้า", a:"วงเดอะซอย", key:"A", sec:[["Intro","A E F#m D"],["Verse","A E F#m D"],["Chorus","D E C#m F#m D E A"]]},
+  {id:"s4", t:"รถไฟสายสุดท้าย", a:"ต้น ธนา", key:"Em", sec:[["Intro","Em C G D"],["Verse","Em C G D"],["Chorus","C D Em Bm C D Em"]]},
+  {id:"s5", t:"คาเฟ่ริมคลอง", a:"มะลิ", key:"D", sec:[["Intro","D A Bm G"],["Verse","D A Bm G"],["Chorus","G A D Bm G A D"]]},
+  {id:"s6", t:"เธอกับฉันและเมษา", a:"นุ่น พลอย", key:"F", sec:[["Intro","F C Dm Bb"],["Verse","F C Dm Bb"],["Chorus","Bb C F Dm Bb C F"]]},
+  {id:"s7", t:"หมอกบนยอดดอย", a:"ต้น ธนา", key:"Am", sec:[["Intro","Am F C G"],["Verse","Am F C G"],["Chorus","F G Am C F G Am"]]},
+  {id:"s8", t:"เก้าอี้ตัวเดิม", a:"มะลิ", key:"E", sec:[["Intro","E B C#m A"],["Verse","E B C#m A"],["Chorus","A B E C#m A B E"]]}
+];
+</script>
+<script>
+// SoundSong: ตัวอย่างระบบขอเพลง (ข้อมูลอยู่ในหน่วยความจำ ไม่มี backend)
+const $ = (s, e = document) => e.querySelector(s);
+const sg = id => SONGS.find(s => s.id === id);
+const REQ = 50, JUMP = 30;                       // ราคาขอเพลง / ราคาลัดคิว (บาท)
+const S = {
+  now: {id: 1, song: "s2", who: "โต๊ะ 2"},       // เพลงที่กำลังเล่น (ลัดคิวไม่ได้)
+  q: [{id: 2, song: "s5", who: "โต๊ะ 7"}, {id: 3, song: "s1", who: "โต๊ะ 4"}, {id: 4, song: "s7", who: "โต๊ะ 9"}],
+  mine: new Set(), nid: 10, q1: "", q3: "", sel: null, tr: 0
+};
+
+const esc = t => String(t).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const ar = s => s.a + (s.custom ? " (ลูกค้าเพิ่ม)" : "");
+let pendingCover = "";
+
+/* ---------- ปกเพลง ---------- */
+// ถ้าเพลงมี cover:"covers/xx.jpg" จะใช้รูปนั้น ถ้าไม่มีจะสร้างปกไล่สีจากรหัสเพลงให้
+const cv = (s, cls = "", badge = "") => {
+  const h = [...s.id].reduce((x, c) => x * 31 + c.charCodeAt(0), 7) % 360;
+  const inner = s.cover ? `<img src="${s.cover}" alt="ปกเพลง ${s.t}">` : `<span>♪</span>`;
+  const bg = s.cover ? "" : ` style="background:linear-gradient(135deg,hsl(${h} 70% 64%),hsl(${(h + 55) % 360} 65% 44%))"`;
+  return `<div class="cv ${cls}"${bg}>${inner}${badge ? `<em>${badge}</em>` : ""}</div>`;
+};
+
+/* ---------- คอร์ด ---------- */
+const N = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"], FL = {Db:"C#",Eb:"D#",Gb:"F#",Ab:"G#",Bb:"A#"};
+const tp = (c, n) => c.replace(/[A-G][#b]?/g, m => N[(N.indexOf(FL[m] || m) + n + 120) % 12]);
+
+/* ---------- QR จำลอง ---------- */
+function qr(seed) {
+  let h = (seed * 2654435761) >>> 0, o = "", z = 25;
+  const rnd = () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
+  const F = [[0, 0], [z - 7, 0], [0, z - 7]];
+  for (let y = 0; y < z; y++) for (let x = 0; x < z; x++) {
+    let on = rnd() > .5;
+    for (const [a, b] of F) {
+      const i = x - a, j = y - b;
+      if (i >= -1 && i <= 7 && j >= -1 && j <= 7)
+        on = i >= 0 && i <= 6 && j >= 0 && j <= 6 && (i % 6 == 0 || j % 6 == 0 || (i > 1 && i < 5 && j > 1 && j < 5));
+    }
+    if (on) o += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+  }
+  return `<svg viewBox="0 0 25 25" shape-rendering="crispEdges" aria-label="QR ตัวอย่าง">${o}</svg>`;
+}
+function pay(title, amt, ok) {
+  const d = $("#pay"); d.returnValue = "";
+  d.innerHTML = `<h3>${title}</h3><div class="big">฿${amt}</div><div class="qr">${qr(amt + title.length)}</div>
+  <p class="c">สแกนจ่ายผ่านแอปธนาคาร (PromptPay ตัวอย่าง)</p>
+  <form method="dialog"><button class="pill ghost" value="x">ยกเลิก</button><button class="pill" value="ok">จ่ายแล้ว (จำลอง)</button></form>`;
+  d.onclose = () => { if (d.returnValue === "ok") ok(); };
+  d.showModal();
+}
+function toast(m) { const t = $("#toast"); t.textContent = m; t.className = "on"; setTimeout(() => t.className = "", 2600); }
+
+/* ---------- หน้าจอ ---------- */
+const wrap = (role, body) => `<div class="sb"><b>9:41</b><span>●●● 76</span></div><div class="bd">
+  <div class="hd"><div class="logo"><i>♪</i>SoundSong</div><span class="chip">${role}</span></div>${body}</div>`;
+
+const secUI = s => (s.sec.length ? s.sec.map(([n, c]) => `<div class="sec">${n}</div>${c.split(" ").map(k => `<span class="chord">${tp(k, S.tr)}</span>`).join("")}`).join("")
+  : '<div class="c" style="margin-top:14px">เพลงนี้ยังไม่มีคอร์ด</div>')
+  + `<button class="pill ghost" data-act="ed" style="margin-top:12px">${s.sec.length ? "แก้ไขคอร์ด" : "เพิ่มคอร์ด"}</button>`;
+const edUI = s => `<textarea id="edt" rows="6" aria-label="คอร์ดเพลง" placeholder="หนึ่งบรรทัดต่อหนึ่งท่อน เช่น&#10;Verse: C G Am F&#10;Chorus: F G C">${s.sec.map(([n, c]) => n + ": " + c).join("\n")}</textarea>
+  <div class="hd" style="margin-top:10px"><button class="pill ghost" data-act="edcancel">ยกเลิก</button><button class="pill" data-act="edsave">บันทึกคอร์ด</button></div>`;
+
+const R = {
+  p1() {  // 1) ลูกค้า: สแกนจ่าย แล้วเลือกเพลง
+    let big = "ยังไม่ได้ขอเพลง", sub = "เลือกเพลงด้านล่าง แล้วสแกนจ่าย";
+    if (S.now && S.mine.has(S.now.id)) { big = "กำลังเล่น"; sub = sg(S.now.song).t; }
+    else { const i = S.q.findIndex(x => S.mine.has(x.id)); if (i >= 0) { big = "คิวที่ " + (i + 1); sub = sg(S.q[i].song).t; } }
+    const f = S.q1.trim(), list = SONGS.filter(s => (s.t + s.a).includes(f));
+    return wrap("ลูกค้า", `<div class="card"><div class="c">คิวของคุณ</div><div class="big">${big}</div><div class="c">${sub}</div></div>
+    <input data-in="q1" placeholder="ค้นหาเพลงหรือศิลปิน" value="${esc(S.q1)}" aria-label="ค้นหาเพลง">
+    <button class="pill blue" data-act="add" style="padding:12px">+ ไม่เจอเพลง? เพิ่มเพลงเอง${f ? ` "${esc(f)}"` : ""}</button>
+    <div class="card">${list.map(s => `<div class="row">${cv(s)}<div class="tx"><b>${s.t}</b><small>${ar(s)}</small></div>
+      <button class="pill" data-act="req" data-id="${s.id}">฿${REQ} ขอเพลง</button></div>`).join("") || '<div class="c">ไม่พบเพลงนี้ในคลัง กดปุ่มด้านบนเพื่อเพิ่มเอง</div>'}</div>`);
+  },
+  p2() {  // 2) คิว + 3) ลัดคิว
+    const n = S.now, w = S.q;
+    return wrap("คิวเพลง", `${n ? `<div class="card now"><div class="hd"><small>กำลังเล่น</small><span class="chip red">ลัดคิวไม่ได้</span></div>
+      <div class="np">${cv(sg(n.song), "lg")}<div><div class="t">${sg(n.song).t}</div><small>${sg(n.song).a} ขอโดย ${n.who}</small></div></div><div class="bar"><i></i></div></div>`
+      : '<div class="card c">ยังไม่มีเพลงเล่น สแกนจ่ายเพื่อขอเพลงแรก</div>'}
+    <div class="card"><div class="hd"><b>คิวรอ</b><small>${w.length} เพลง</small></div>
+    ${w.map((x, i) => `<div class="row">${cv(sg(x.song), "", i + 1)}<div class="tx"><b>${sg(x.song).t}</b><small>ขอโดย ${x.who}</small></div>
+      ${i ? `<button class="pill blue" data-act="jump" data-id="${x.id}">฿${JUMP} ลัดคิว</button>` : '<span class="chip">ถัดไป</span>'}</div>`).join("") || '<div class="c">ไม่มีคิวรอ</div>'}</div>
+    <div class="card tip"><div class="ic">!</div><small>เพลงที่กำลังเล่นลัดคิวไม่ได้ แต่ลัดไปเป็นคิวที่ 1 ของคิวรอได้</small></div>`);
+  },
+  p3() {  // 4) นักดนตรี: ค้นหาเพลงที่ขอ + เปิดคอร์ด
+    const f = S.q3.trim(), seen = new Set(), ids = [];
+    [S.now, ...S.q].filter(Boolean).forEach(x => { if (!seen.has(x.song)) { seen.add(x.song); ids.push(x.song); } });
+    if (f) SONGS.forEach(s => { if (!seen.has(s.id)) ids.push(s.id); });
+    const shown = ids.filter(id => sg(id).t.includes(f));
+    const cur = S.sel || (S.now && S.now.song) || (S.q[0] && S.q[0].song), s = cur && sg(cur);
+    return wrap("นักดนตรี", `<input data-in="q3" placeholder="ค้นหาชื่อเพลงที่ลูกค้าขอ" value="${esc(S.q3)}" aria-label="ค้นหาเพลง">
+    <div class="chips">${shown.map(id => `<button class="chip ${id === cur ? "sel" : ""}" data-act="sel" data-song="${id}">${sg(id).t}</button>`).join("") || '<small>ไม่พบเพลงนี้</small>'}</div>
+    ${s ? `<div class="card"><div class="hd">${cv(s, "lg")}<div class="tx"><b style="font-size:18px">${s.t}</b><small>${ar(s)}</small></div>
+      <div class="tr"><button class="pill ghost" data-act="tr" data-d="-1" aria-label="ลดคีย์">-</button><b>${s.key ? tp(s.key, S.tr) : "-"}</b>
+      <button class="pill ghost" data-act="tr" data-d="1" aria-label="เพิ่มคีย์">+</button></div></div>
+      ${S.ed === s.id ? edUI(s) : secUI(s)}</div>`
+      : '<div class="card c">ยังไม่มีเพลงในคิว</div>'}
+    <button class="pill" data-act="next" ${S.q.length ? "" : "disabled"} style="padding:13px">เล่นเพลงถัดไป</button>`);
+  }
+};
+const render = id => $("#" + id).innerHTML = R[id]();
+const renderAll = () => Object.keys(R).forEach(render);
+
+/* ---------- การกระทำ ---------- */
+const A = {
+  req(b) {
+    const s = sg(b.dataset.id);
+    pay(`ขอเพลง "${s.t}"`, REQ, () => {
+      const it = {id: S.nid++, song: s.id, who: "คุณ"}; S.mine.add(it.id);
+      if (S.now) S.q.push(it); else S.now = it;
+      renderAll(); toast("ขอเพลงแล้ว");
+    });
+  },
+  jump(b) {
+    const id = +b.dataset.id;
+    pay("ลัดคิวเป็นอันดับ 1", JUMP, () => {
+      const i = S.q.findIndex(x => x.id === id);
+      if (i < 0) return toast("เพลงนี้เริ่มเล่นแล้ว ลัดคิวไม่ได้");
+      S.q.unshift(S.q.splice(i, 1)[0]); renderAll(); toast("ลัดไปเป็นคิวที่ 1 แล้ว");
+    });
+  },
+  add() { addDlg(); },
+  ed() { S.ed = S.sel || (S.now && S.now.song) || (S.q[0] && S.q[0].song); render("p3"); },
+  edcancel() { S.ed = null; render("p3"); },
+  edsave() {
+    const sec = [];
+    for (const l of $("#edt").value.split("\n").map(x => x.trim()).filter(Boolean)) {
+      const i = l.indexOf(":"), c = (i > 0 ? l.slice(i + 1) : l).trim().split(/\s+/).filter(Boolean);
+      if (!c.length) continue;
+      if (!c.every(k => /^[A-G][#b]?[A-Za-z0-9#+()\/-]*$/.test(k))) return toast("คอร์ดไม่ถูกต้อง ใช้รูปแบบเช่น C G Am F7");
+      sec.push([i > 0 ? esc(l.slice(0, i).trim()) : "Chords", c.join(" ")]);
+    }
+    const s = sg(S.ed); s.sec = sec; s.key = sec[0] ? sec[0][1].split(" ")[0] : "";
+    S.ed = null; S.tr = 0; render("p3"); toast("บันทึกคอร์ดแล้ว");
+  },
+  next() { S.now = S.q.shift() || null; S.sel = null; S.ed = null; S.tr = 0; renderAll(); },
+  sel(b) { S.sel = b.dataset.song; S.ed = null; S.tr = 0; render("p3"); },
+  tr(b) { S.tr += +b.dataset.d; render("p3"); }
+};
+function addDlg() {
+  const d = $("#add"); d.returnValue = ""; pendingCover = "";
+  d.innerHTML = `<h3>เพิ่มเพลงที่ต้องการ</h3><p class="c">ไม่เจอเพลงในคลัง? ใส่ชื่อเพลงให้นักดนตรีเตรียมเล่น</p>
+  <form method="dialog" class="col"><input id="at" placeholder="ชื่อเพลง *" maxlength="60" required value="${esc(S.q1.trim())}" aria-label="ชื่อเพลง">
+  <input id="aa" placeholder="ศิลปิน (ไม่บังคับ)" maxlength="40" aria-label="ศิลปิน">
+  <label class="file">รูปปก (ไม่บังคับ)<input id="af" type="file" accept="image/*"></label>
+  <div class="hd"><button class="pill ghost" value="x" formnovalidate>ยกเลิก</button><button class="pill" value="ok">ไปจ่ายเงิน ฿${REQ}</button></div></form>`;
+  d.onclose = () => {
+    if (d.returnValue !== "ok") return;
+    const t = esc($("#at").value.trim()), au = esc($("#aa").value.trim());
+    if (!t) return;
+    const dup = SONGS.find(s => s.t.toLowerCase() === t.toLowerCase());
+    if (dup) toast("มีเพลงนี้ในคลังแล้ว ใช้เพลงในคลังให้");
+    const song = dup || {id: "c" + S.nid++, t, a: au || "ไม่ระบุศิลปิน", key: "", sec: [], custom: true, cover: pendingCover};
+    pay(`ขอเพลง "${song.t}"`, REQ, () => {
+      if (!dup) SONGS.push(song);
+      const it = {id: S.nid++, song: song.id, who: "คุณ"}; S.mine.add(it.id);
+      if (S.now) S.q.push(it); else S.now = it;
+      S.q1 = ""; renderAll(); toast("เพิ่มเพลงและขอเพลงแล้ว");
+    });
+  };
+  d.showModal(); $("#at").focus();
+}
+document.addEventListener("change", e => {   // ย่อรูปปกที่ลูกค้าเลือกเป็น 160x160
+  if (e.target.id !== "af" || !e.target.files[0]) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas"); c.width = c.height = 160; const m = Math.min(img.width, img.height);
+    c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 160, 160);
+    pendingCover = c.toDataURL("image/jpeg", .8); URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(e.target.files[0]);
+});
+document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (b && !b.disabled) A[b.dataset.act](b); });
+document.addEventListener("input", e => {
+  const k = e.target.dataset.in; if (!k) return;
+  S[k] = e.target.value; const id = e.target.closest(".phone").id; render(id);
+  const n = $("#" + id + " input"); n.focus(); n.setSelectionRange(999, 999);
+});
+renderAll();
+</script>
+</body>
+</html>
